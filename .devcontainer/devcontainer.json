@@ -1,0 +1,19 @@
+
+{
+  "name": "pdflabel",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "workspaceFolder": "/workspaces/pdflabel",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "remoteUser": "vscode",
+  "overrideCommand": true,
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code"]
+    }
+  },
+  "postCreateCommand": ".devcontainer/post_create.sh && sudo chown -R vscode:vscode /home/vscode/.claude"
+}
