@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ラベルPDF作成</title>
+<style>
+  body {
+    font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f2f2f2;
+    color: #222;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+  h1 {
+    font-size: 20px;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 15px;
+  }
+  fieldset {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  legend {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+  }
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  label {
+    font-size: 13px;
+    color: #333;
+  }
+  input[type="number"] {
+    width: 90px;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  button {
+    padding: 10px 24px;
+    font-size: 15px;
+    background: #2d6cdf;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  #status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #666;
+    white-space: pre-wrap;
+  }
+  #status.error {
+    color: #c00;
+  }
+  #preview {
+    margin-top: 24px;
+    overflow-x: auto;
+  }
+  #previewPage {
+    position: relative;
+    background: #fff;
+    border: 1px solid #999;
+    box-sizing: border-box;
+  }
+  .label-box {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid #333;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ラベルPDF作成</h1>
+
+  <fieldset>
+    <legend>用紙設定</legend>
+    <p>用紙サイズ: A4（210mm × 297mm）固定</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="marginTop">上余白(mm)</label>
+        <input type="number" id="marginTop" value="10" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="marginBottom">下余白(mm)</label>
+        <input type="number" id="marginBottom" value="10" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="marginLeft">左余白(mm)</label>
+        <input type="number" id="marginLeft" value="10" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="marginRight">右余白(mm)</label>
+        <input type="number" id="marginRight" value="10" min="0" step="0.5">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>ラベル設定</legend>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="labelWidth">ラベル幅(mm)</label>
+        <input type="number" id="labelWidth" value="70" min="1" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="labelHeight">ラベル高さ(mm)</label>
+        <input type="number" id="labelHeight" value="37" min="1" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="labelGap">ラベル間余白(mm)</label>
+        <input type="number" id="labelGap" value="2" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="fontSize">フォントサイズ(pt)</label>
+        <input type="number" id="fontSize" value="10" min="1" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="labelCount">印字枚数</label>
+        <input type="number" id="labelCount" value="14" min="1" step="1">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>印字内容</legend>
+    <textarea id="labelText" placeholder="すべてのラベルに印字するテキストを入力してください">サンプルラベル</textarea>
+  </fieldset>
+
+  <div class="form-row">
+    <button id="generateBtn" type="button">PDFを生成</button>
+  </div>
+  <div id="status"></div>
+
+  <div id="preview">
+    <h2>プレビュー（1ページ目）</h2>
+    <div id="previewPage"></div>
+  </div>
+</div>
+
+<!-- jsPDFライブラリ（バージョン固定）をCDNから読み込む -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // 用紙サイズ（A4固定、単位mm）
+  var PAGE_WIDTH = 210;
+  var PAGE_HEIGHT = 297;
+
+  // ラベル内のテキスト余白(mm)
+  var LABEL_PADDING = 2;
+
+  // PDF内の日本語描画用フォント（IPAexゴシック。IPAフォントライセンスでPDFへの埋め込み・再配布が許諾されている）
+  var JAPANESE_FONT_URL = "https://cdn.jsdelivr.net/npm/@fontpkg/ip-aex-gothic@4.1.1/IPAexGothic.ttf";
+  var JAPANESE_FONT_NAME = "IPAexGothic";
+
+  // 画面プレビュー用の mm→px 換算スケール（実寸ではなく見た目確認用）
+  var PREVIEW_SCALE = 2.2;
+
+  var cachedFontBase64 = null; // フォントデータのキャッシュ（毎回ダウンロードしないようにする）
+
+  var inputIds = [
+    "marginTop", "marginBottom", "marginLeft", "marginRight",
+    "labelWidth", "labelHeight", "labelGap", "fontSize", "labelCount", "labelText"
+  ];
+
+  // 画面の入力項目をまとめて取得する
+  function getSettings() {
+    return {
+      marginTop: Number(document.getElementById("marginTop").value) || 0,
+      marginBottom: Number(document.getElementById("marginBottom").value) || 0,
+      marginLeft: Number(document.getElementById("marginLeft").value) || 0,
+      marginRight: Number(document.getElementById("marginRight").value) || 0,
+      labelWidth: Number(document.getElementById("labelWidth").value) || 0,
+      labelHeight: Number(document.getElementById("labelHeight").value) || 0,
+      labelGap: Number(document.getElementById("labelGap").value) || 0,
+      fontSize: Number(document.getElementById("fontSize").value) || 10,
+      labelCount: Math.max(1, Math.floor(Number(document.getElementById("labelCount").value) || 1)),
+      text: document.getElementById("labelText").value
+    };
+  }
+
+  // 用紙サイズ・余白・ラベルサイズ・ラベル間余白から、1ページに配置できる列数・行数を計算する
+  function calcGrid(s) {
+    var usableWidth = PAGE_WIDTH - s.marginLeft - s.marginRight;
+    var usableHeight = PAGE_HEIGHT - s.marginTop - s.marginBottom;
+    // ラベル1個分の専有幅・高さ（ラベル自身 + ラベル間余白1個分）で列数・行数を算出する
+    var cols = Math.floor((usableWidth + s.labelGap) / (s.labelWidth + s.labelGap));
+    var rows = Math.floor((usableHeight + s.labelGap) / (s.labelHeight + s.labelGap));
+    return { cols: Math.max(0, cols), rows: Math.max(0, rows) };
+  }
+
+  function setStatus(message, isError) {
+    var el = document.getElementById("status");
+    el.textContent = message;
+    el.classList.toggle("error", !!isError);
+  }
+
+  // プレビュー描画（1ページ目のみ、画面上でのイメージ確認用）
+  function renderPreview() {
+    var s = getSettings();
+    var grid = calcGrid(s);
+    var page = document.getElementById("previewPage");
+    page.innerHTML = "";
+    page.style.width = (PAGE_WIDTH * PREVIEW_SCALE) + "px";
+    page.style.height = (PAGE_HEIGHT * PREVIEW_SCALE) + "px";
+
+    if (grid.cols < 1 || grid.rows < 1) {
+      setStatus("設定した余白・ラベルサイズでは、用紙に1枚もラベルが配置できません。値を見直してください。", true);
+      return;
+    }
+
+    var perPage = grid.cols * grid.rows;
+    setStatus("1ページに " + grid.cols + "列 × " + grid.rows + "行 = " + perPage + "枚 配置できます。");
+
+    var countOnFirstPage = Math.min(perPage, s.labelCount);
+    for (var i = 0; i < countOnFirstPage; i++) {
+      var col = i % grid.cols;
+      var row = Math.floor(i / grid.cols);
+      var x = s.marginLeft + col * (s.labelWidth + s.labelGap);
+      var y = s.marginTop + row * (s.labelHeight + s.labelGap);
+
+      var box = document.createElement("div");
+      box.className = "label-box";
+      box.style.left = (x * PREVIEW_SCALE) + "px";
+      box.style.top = (y * PREVIEW_SCALE) + "px";
+      box.style.width = (s.labelWidth * PREVIEW_SCALE) + "px";
+      box.style.height = (s.labelHeight * PREVIEW_SCALE) + "px";
+      box.style.padding = (LABEL_PADDING * PREVIEW_SCALE) + "px";
+      box.style.fontSize = (s.fontSize * PREVIEW_SCALE * 0.5) + "px"; // pt→px簡易換算（プレビュー表示用）
+      box.textContent = s.text;
+      page.appendChild(box);
+    }
+  }
+
+  // 日本語フォントをCDNから取得し、Base64文字列に変換する（PDFへの埋め込み用）
+  function loadJapaneseFontBase64() {
+    if (cachedFontBase64) {
+      return Promise.resolve(cachedFontBase64);
+    }
+    setStatus("日本語フォントを読み込み中です…");
+    return fetch(JAPANESE_FONT_URL).then(function (res) {
+      if (!res.ok) {
+        throw new Error("フォントの取得に失敗しました: " + res.status);
+      }
+      return res.arrayBuffer();
+    }).then(function (buffer) {
+      var bytes = new Uint8Array(buffer);
+      // バイナリ→Base64変換（大きいファイルでも引数エラーにならないようチャンク分割する）
+      var binary = "";
+      var chunkSize = 0x8000;
+      for (var i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      cachedFontBase64 = btoa(binary);
+      return cachedFontBase64;
+    });
+  }
+
+  // PDFを生成してダウンロードする
+  function generatePdf() {
+    var s = getSettings();
+    var grid = calcGrid(s);
+
+    if (grid.cols < 1 || grid.rows < 1) {
+      setStatus("設定した余白・ラベルサイズでは、用紙に1枚もラベルが配置できません。値を見直してください。", true);
+      return;
+    }
+    if (!s.text) {
+      setStatus("印字内容を入力してください。", true);
+      return;
+    }
+
+    var generateBtn = document.getElementById("generateBtn");
+    generateBtn.disabled = true;
+
+    loadJapaneseFontBase64().then(function (fontBase64) {
+      setStatus("PDFを生成中です…");
+
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF({ unit: "mm", format: "a4" });
+
+      // 日本語フォントをPDFに埋め込んで使用するフォントとして登録する
+      doc.addFileToVFS(JAPANESE_FONT_NAME + ".ttf", fontBase64);
+      doc.addFont(JAPANESE_FONT_NAME + ".ttf", JAPANESE_FONT_NAME, "normal");
+      doc.setFont(JAPANESE_FONT_NAME, "normal");
+      doc.setFontSize(s.fontSize);
+
+      var perPage = grid.cols * grid.rows;
+      var totalPages = Math.ceil(s.labelCount / perPage);
+      var maxTextWidth = s.labelWidth - LABEL_PADDING * 2;
+
+      for (var page = 0; page < totalPages; page++) {
+        if (page > 0) {
+          doc.addPage();
+        }
+
+        var remaining = s.labelCount - page * perPage;
+        var countOnThisPage = Math.min(perPage, remaining);
+
+        for (var i = 0; i < countOnThisPage; i++) {
+          var col = i % grid.cols;
+          var row = Math.floor(i / grid.cols);
+          var x = s.marginLeft + col * (s.labelWidth + s.labelGap);
+          var y = s.marginTop + row * (s.labelHeight + s.labelGap);
+
+          // ラベルの枠線（罫線）を描画
+          doc.rect(x, y, s.labelWidth, s.labelHeight);
+
+          // テキストをラベル幅で折り返し、左上揃えで描画する
+          var lines = doc.splitTextToSize(s.text, maxTextWidth);
+          doc.text(lines, x + LABEL_PADDING, y + LABEL_PADDING, { baseline: "top" });
+        }
+      }
+
+      doc.save("labels.pdf");
+      setStatus("PDFを生成しました（全" + totalPages + "ページ、" + s.labelCount + "枚分）。");
+    }).catch(function (err) {
+      console.error(err);
+      setStatus("PDF生成中にエラーが発生しました: " + err.message, true);
+    }).finally(function () {
+      generateBtn.disabled = false;
+    });
+  }
+
+  document.getElementById("generateBtn").addEventListener("click", generatePdf);
+
+  // 入力値が変わるたびにプレビューを更新する
+  inputIds.forEach(function (id) {
+    document.getElementById(id).addEventListener("input", renderPreview);
+  });
+
+  // 初期表示
+  renderPreview();
+})();
+</script>
+</body>
+</html>
