@@ -59,6 +59,13 @@
     border-radius: 4px;
     font-size: 14px;
   }
+  select {
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+  }
   textarea {
     width: 100%;
     min-height: 80px;
@@ -143,6 +150,17 @@
     <legend>ラベル設定</legend>
     <div class="form-row">
       <div class="form-group">
+        <label for="presetSelect">プリセット</label>
+        <select id="presetSelect">
+          <option value="custom">1: カスタム（手動設定）</option>
+          <option value="a4-72">2: A4 72面</option>
+          <option value="a4-24">3: A4 24面</option>
+          <option value="a4-44">4: A4 44面</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
         <label for="labelWidth">ラベル幅(mm)</label>
         <input type="number" id="labelWidth" value="70" min="1" step="0.5">
       </div>
@@ -151,8 +169,12 @@
         <input type="number" id="labelHeight" value="37" min="1" step="0.5">
       </div>
       <div class="form-group">
-        <label for="labelGap">ラベル間余白(mm)</label>
-        <input type="number" id="labelGap" value="2" min="0" step="0.5">
+        <label for="labelGapX">ラベル間余白・横(mm)</label>
+        <input type="number" id="labelGapX" value="2" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label for="labelGapY">ラベル間余白・縦(mm)</label>
+        <input type="number" id="labelGapY" value="2" min="0" step="0.5">
       </div>
       <div class="form-group">
         <label for="fontSize">フォントサイズ(pt)</label>
@@ -203,9 +225,19 @@
 
   var cachedFontBase64 = null; // フォントデータのキャッシュ（毎回ダウンロードしないようにする）
 
+  // 実在するA4ラベル用紙のレイアウトプリセット
+  // marginTB: 上下余白, marginLR: 左右余白, labelW/labelH: ラベル幅・高さ, gapX: ラベル間の横余白, gapY: ラベル間の縦余白
+  // ※ labelW/labelHは正式な製品仕様が未確定のため、面数（72/24/44）が計算結果と一致するよう逆算した暫定値。
+  //   正確な数値が判明次第、差し替えること。
+  var PRESETS = {
+    "a4-72": { marginTB: 10.2, marginLR: 7.6, labelW: 30, labelH: 23, gapX: 2.54, gapY: 0 },
+    "a4-24": { marginTB: 13.5, marginLR: 6.8, labelW: 45, labelH: 42, gapX: 2.54, gapY: 0 },
+    "a4-44": { marginTB: 10.2, marginLR: 7.6, labelW: 45, labelH: 25, gapX: 2.54, gapY: 0 }
+  };
+
   var inputIds = [
     "marginTop", "marginBottom", "marginLeft", "marginRight",
-    "labelWidth", "labelHeight", "labelGap", "fontSize", "labelCount", "labelText"
+    "labelWidth", "labelHeight", "labelGapX", "labelGapY", "fontSize", "labelCount", "labelText"
   ];
 
   // 画面の入力項目をまとめて取得する
@@ -217,20 +249,38 @@
       marginRight: Number(document.getElementById("marginRight").value) || 0,
       labelWidth: Number(document.getElementById("labelWidth").value) || 0,
       labelHeight: Number(document.getElementById("labelHeight").value) || 0,
-      labelGap: Number(document.getElementById("labelGap").value) || 0,
+      labelGapX: Number(document.getElementById("labelGapX").value) || 0,
+      labelGapY: Number(document.getElementById("labelGapY").value) || 0,
       fontSize: Number(document.getElementById("fontSize").value) || 10,
       labelCount: Math.max(1, Math.floor(Number(document.getElementById("labelCount").value) || 1)),
       text: document.getElementById("labelText").value
     };
   }
 
-  // 用紙サイズ・余白・ラベルサイズ・ラベル間余白から、1ページに配置できる列数・行数を計算する
+  // プリセット選択時に、余白・ラベルサイズ・ラベル間余白を自動設定する（選択後も手動で変更可能）
+  function applyPreset(key) {
+    var preset = PRESETS[key];
+    if (!preset) {
+      return; // カスタム（手動設定）の場合は何もしない
+    }
+    document.getElementById("marginTop").value = preset.marginTB;
+    document.getElementById("marginBottom").value = preset.marginTB;
+    document.getElementById("marginLeft").value = preset.marginLR;
+    document.getElementById("marginRight").value = preset.marginLR;
+    document.getElementById("labelWidth").value = preset.labelW;
+    document.getElementById("labelHeight").value = preset.labelH;
+    document.getElementById("labelGapX").value = preset.gapX;
+    document.getElementById("labelGapY").value = preset.gapY;
+    renderPreview();
+  }
+
+  // 用紙サイズ・余白・ラベルサイズ・ラベル間余白(横・縦)から、1ページに配置できる列数・行数を計算する
   function calcGrid(s) {
     var usableWidth = PAGE_WIDTH - s.marginLeft - s.marginRight;
     var usableHeight = PAGE_HEIGHT - s.marginTop - s.marginBottom;
     // ラベル1個分の専有幅・高さ（ラベル自身 + ラベル間余白1個分）で列数・行数を算出する
-    var cols = Math.floor((usableWidth + s.labelGap) / (s.labelWidth + s.labelGap));
-    var rows = Math.floor((usableHeight + s.labelGap) / (s.labelHeight + s.labelGap));
+    var cols = Math.floor((usableWidth + s.labelGapX) / (s.labelWidth + s.labelGapX));
+    var rows = Math.floor((usableHeight + s.labelGapY) / (s.labelHeight + s.labelGapY));
     return { cols: Math.max(0, cols), rows: Math.max(0, rows) };
   }
 
@@ -261,8 +311,8 @@
     for (var i = 0; i < countOnFirstPage; i++) {
       var col = i % grid.cols;
       var row = Math.floor(i / grid.cols);
-      var x = s.marginLeft + col * (s.labelWidth + s.labelGap);
-      var y = s.marginTop + row * (s.labelHeight + s.labelGap);
+      var x = s.marginLeft + col * (s.labelWidth + s.labelGapX);
+      var y = s.marginTop + row * (s.labelHeight + s.labelGapY);
 
       var box = document.createElement("div");
       box.className = "label-box";
@@ -345,8 +395,8 @@
         for (var i = 0; i < countOnThisPage; i++) {
           var col = i % grid.cols;
           var row = Math.floor(i / grid.cols);
-          var x = s.marginLeft + col * (s.labelWidth + s.labelGap);
-          var y = s.marginTop + row * (s.labelHeight + s.labelGap);
+          var x = s.marginLeft + col * (s.labelWidth + s.labelGapX);
+          var y = s.marginTop + row * (s.labelHeight + s.labelGapY);
 
           // ラベルの枠線（罫線）を描画
           doc.rect(x, y, s.labelWidth, s.labelHeight);
@@ -368,6 +418,11 @@
   }
 
   document.getElementById("generateBtn").addEventListener("click", generatePdf);
+
+  // プリセット選択時に対応する値を自動設定する
+  document.getElementById("presetSelect").addEventListener("change", function (e) {
+    applyPreset(e.target.value);
+  });
 
   // 入力値が変わるたびにプレビューを更新する
   inputIds.forEach(function (id) {
