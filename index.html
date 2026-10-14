@@ -225,14 +225,13 @@
 
   var cachedFontBase64 = null; // フォントデータのキャッシュ（毎回ダウンロードしないようにする）
 
-  // 実在するA4ラベル用紙のレイアウトプリセット
-  // marginTB: 上下余白, marginLR: 左右余白, labelW/labelH: ラベル幅・高さ, gapX: ラベル間の横余白, gapY: ラベル間の縦余白
-  // ※ labelW/labelHは正式な製品仕様が未確定のため、面数（72/24/44）が計算結果と一致するよう逆算した暫定値。
-  //   正確な数値が判明次第、差し替えること。
+  // 実在するA4ラベル用紙のレイアウトプリセット（製品仕様の実測値）
+  // marginTop/marginBottom/marginLeft/marginRight: 余白, labelW/labelH: ラベル幅・高さ,
+  // gapX: ラベル間の横余白, gapY: ラベル間の縦余白
   var PRESETS = {
-    "a4-72": { marginTB: 10.2, marginLR: 7.6, labelW: 30, labelH: 23, gapX: 2.54, gapY: 0 },
-    "a4-24": { marginTB: 13.5, marginLR: 6.8, labelW: 45, labelH: 42, gapX: 2.54, gapY: 0 },
-    "a4-44": { marginTB: 10.2, marginLR: 7.6, labelW: 45, labelH: 25, gapX: 2.54, gapY: 0 }
+    "a4-72": { marginTop: 10.2, marginBottom: 10.2, marginLeft: 7.6, marginRight: 7.6, labelW: 25.4, labelH: 10, gapX: 2.54, gapY: 0 },
+    "a4-24": { marginTop: 13.5, marginBottom: 12.6, marginLeft: 6.8, marginRight: 6.8, labelW: 64.3, labelH: 33.9, gapX: 0, gapY: 0 },
+    "a4-44": { marginTop: 10.6, marginBottom: 10.6, marginLeft: 6.46, marginRight: 6.46, labelW: 48.4, labelH: 23.4, gapX: 0, gapY: 0 }
   };
 
   var inputIds = [
@@ -263,10 +262,10 @@
     if (!preset) {
       return; // カスタム（手動設定）の場合は何もしない
     }
-    document.getElementById("marginTop").value = preset.marginTB;
-    document.getElementById("marginBottom").value = preset.marginTB;
-    document.getElementById("marginLeft").value = preset.marginLR;
-    document.getElementById("marginRight").value = preset.marginLR;
+    document.getElementById("marginTop").value = preset.marginTop;
+    document.getElementById("marginBottom").value = preset.marginBottom;
+    document.getElementById("marginLeft").value = preset.marginLeft;
+    document.getElementById("marginRight").value = preset.marginRight;
     document.getElementById("labelWidth").value = preset.labelW;
     document.getElementById("labelHeight").value = preset.labelH;
     document.getElementById("labelGapX").value = preset.gapX;
