@@ -13,6 +13,9 @@
   - `pdfplumber`, `pdf2image`, `pytesseract`, `Pillow` を導入済み
   - `tesseract-ocr` / `tesseract-ocr-jpn` / `poppler-utils` を apt でインストール
   - 既存のラベル用紙PDFのレイアウト解析（OCR・座標抽出）に利用する想定
+- PHP CLI / Composer（`post_create.sh` で導入）
+  - `php-cli`, `php-mbstring`, `php-xml`, `php-gd`, `php-curl`, `php-zip` を apt でインストール、Composerを公式インストーラでシステムに導入
+  - 実際のLaravelアプリ本体はこのdevcontainerには無く、Windows側に別途構築済み。このdevcontainerでは、`laravel/`フォルダ配下のLaravel統合コード（コントローラ・Bladeビュー等）の構文チェックや、`illuminate/view`等を使った単体での動作検証に利用する
 
 ## 技術仕様
 1. html + javascript
