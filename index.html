@@ -153,7 +153,7 @@
         <label for="presetSelect">プリセット</label>
         <select id="presetSelect">
           <option value="custom">1: カスタム（手動設定）</option>
-          <option value="a4-72">2: A4 72面</option>
+          <option value="a4-65">2: A4 65面</option>
           <option value="a4-24">3: A4 24面</option>
           <option value="a4-44">4: A4 44面</option>
         </select>
@@ -229,9 +229,9 @@
   // marginTop/marginBottom/marginLeft/marginRight: 余白, labelW/labelH: ラベル幅・高さ,
   // gapX: ラベル間の横余白, gapY: ラベル間の縦余白
   var PRESETS = {
-    "a4-72": { marginTop: 10.2, marginBottom: 10.2, marginLeft: 7.6, marginRight: 7.6, labelW: 25.4, labelH: 10, gapX: 2.54, gapY: 0 },
-    "a4-24": { marginTop: 13.5, marginBottom: 12.6, marginLeft: 6.8, marginRight: 6.8, labelW: 64.3, labelH: 33.9, gapX: 0, gapY: 0 },
-    "a4-44": { marginTop: 10.6, marginBottom: 10.6, marginLeft: 6.46, marginRight: 6.46, labelW: 48.4, labelH: 23.4, gapX: 0, gapY: 0 }
+    "a4-65": { marginTop: 10.7, marginBottom: 10.7, marginLeft: 9.8, marginRight: 9.8, labelW: 38.1, labelH: 21.2, gapX: 0, gapY: 0 },
+    "a4-24": { marginTop: 12.9, marginBottom: 12.9, marginLeft: 6.0, marginRight: 6.0, labelW: 66.0, labelH: 33.9, gapX: 0, gapY: 0 },
+    "a4-44": { marginTop: 9.0, marginBottom: 9.0, marginLeft: 7.5, marginRight: 7.5, labelW: 48.3, labelH: 25.4, gapX: 0, gapY: 0 }
   };
 
   var inputIds = [
@@ -273,13 +273,17 @@
     renderPreview();
   }
 
+  // 製品仕様の余白値は0.1mm単位に丸められていることが多く、そのままでは本来入るはずの
+  // 列・行が端数不足で1つ少なく計算されることがあるため、浮動小数の許容誤差を設ける
+  var FIT_EPSILON = 0.5;
+
   // 用紙サイズ・余白・ラベルサイズ・ラベル間余白(横・縦)から、1ページに配置できる列数・行数を計算する
   function calcGrid(s) {
     var usableWidth = PAGE_WIDTH - s.marginLeft - s.marginRight;
     var usableHeight = PAGE_HEIGHT - s.marginTop - s.marginBottom;
     // ラベル1個分の専有幅・高さ（ラベル自身 + ラベル間余白1個分）で列数・行数を算出する
-    var cols = Math.floor((usableWidth + s.labelGapX) / (s.labelWidth + s.labelGapX));
-    var rows = Math.floor((usableHeight + s.labelGapY) / (s.labelHeight + s.labelGapY));
+    var cols = Math.floor((usableWidth + s.labelGapX + FIT_EPSILON) / (s.labelWidth + s.labelGapX));
+    var rows = Math.floor((usableHeight + s.labelGapY + FIT_EPSILON) / (s.labelHeight + s.labelGapY));
     return { cols: Math.max(0, cols), rows: Math.max(0, rows) };
   }
 
