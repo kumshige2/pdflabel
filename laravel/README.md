@@ -60,8 +60,10 @@
 - `app/Http/Controllers/LabelPdfController.php`: `php -l` で構文チェック済み
 - `resources/views/label_pdf/pdf.blade.php`: `illuminate/view` 単体（Laravelスタブ環境）でコンパイル・実行し、
   65面／24面／44面の3プリセットすべてで、名称どおりの枚数・正しいページ数が生成されることを確認
-- 実際に `dompdf/dompdf` でPDF化し、画像変換して目視確認
+- 実際に `dompdf/dompdf` でPDF化し、画像変換・座標解析（`pdfplumber`）で目視+数値の両方で確認
   - 初期実装では `white-space: pre-wrap; word-break: break-all;` だとdompdfでは折り返されずラベル枠からテキストがはみ出す不具合があったため、
     `white-space: normal; word-wrap: break-word;` ＋ `nl2br()` による改行変換に修正済み（`pdf.blade.php` 内コメント参照）
+  - **2026-10-16 追加修正**: dompdfは `box-sizing: border-box` を尊重せず、width/height指定済みの要素にpadding・borderをそのまま加算して外寸が膨らむ不具合があった（44面プリセットで実測：指定136.91pt→実測149.0pt など、縦横とも約4.26mm＝padding(2mm)×2＋border分だけ過大）。これにより隣接ラベルの枠と文字が重なって見えていた。
+    枠線用の`.label-box`とテキスト・padding用の内側`.label-text`を分離する構造に変更し解消（詳細は`pdf.blade.php`内コメント参照）。修正後は3プリセットとも実測との差が罫線の太さ分（約0.26mm）のみに収まることを確認済み。
 
 `index.blade.php`（フォーム画面）は `@extends('adminlte::page')` に依存しており、AdminLTE本体がないこの環境ではレンダリングできないため未検証です。Windows側の実環境で表示崩れがないか確認をお願いします。

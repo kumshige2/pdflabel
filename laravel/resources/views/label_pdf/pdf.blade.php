@@ -31,11 +31,19 @@
         page-break-after: auto;
     }
 
+    /* dompdfは box-sizing:border-box を尊重せず、width/heightを指定した要素に
+       padding・borderをそのまま加算してしまう（内寸ではなく外寸が増える）ため、
+       枠線(.label-box)とテキスト(.label-text)を別要素に分離する。
+       .label-boxはpadding/font関連を持たず、指定した幅・高さちょうどで描画される。
+       内側の.label-textはwidth/heightを指定しないことで、paddingによる外寸への
+       影響を避けている。 */
     .label-box {
         position: absolute;
-        box-sizing: border-box;
         border: 1px solid #000;
         overflow: hidden;
+    }
+
+    .label-text {
         padding: {{ $padding }}mm;
         font-size: {{ $s['font_size'] }}pt;
         /* dompdfは white-space:pre-wrap + word-break:break-all だと折り返されず
@@ -61,7 +69,7 @@
             $x = $s['margin_left'] + $col * ($s['label_width'] + $s['label_gap_x']);
             $y = $s['margin_top'] + $row * ($s['label_height'] + $s['label_gap_y']);
         @endphp
-        <div class="label-box" style="left: {{ $x }}mm; top: {{ $y }}mm; width: {{ $s['label_width'] }}mm; height: {{ $s['label_height'] }}mm;">{!! nl2br(e($s['label_text'])) !!}</div>
+        <div class="label-box" style="left: {{ $x }}mm; top: {{ $y }}mm; width: {{ $s['label_width'] }}mm; height: {{ $s['label_height'] }}mm;"><div class="label-text">{!! nl2br(e($s['label_text'])) !!}</div></div>
     @endfor
 </div>
 @endfor
