@@ -12,3 +12,13 @@ sudo apt-get install -y php-cli php-mbstring php-xml php-gd php-curl php-zip unz
 curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
 sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 rm /tmp/composer-setup.php
+
+# PostgreSQL（Windows側の本番相当DBがversion 16系のため合わせる）
+# Debian標準リポジトリには15系までしかないため、公式PGDGリポジトリを追加する
+sudo install -d /usr/share/postgresql-common/pgdg
+sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+sudo apt-get update
+sudo apt-get install -y postgresql-16
+# 個人情報を含む実データは投入しないこと。テスト用にはWindows側のLaravel Factory/Seeder（合成データ）を使う
+sudo service postgresql start

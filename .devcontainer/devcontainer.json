@@ -15,5 +15,6 @@
       "extensions": ["anthropic.claude-code"]
     }
   },
-  "postCreateCommand": ".devcontainer/post_create.sh && sudo chown -R vscode:vscode /home/vscode/.claude"
+  "postCreateCommand": ".devcontainer/post_create.sh && sudo chown -R vscode:vscode /home/vscode/.claude",
+  "postStartCommand": "sudo service postgresql start"
 }

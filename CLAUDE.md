@@ -16,6 +16,9 @@
 - PHP CLI / Composer（`post_create.sh` で導入）
   - `php-cli`, `php-mbstring`, `php-xml`, `php-gd`, `php-curl`, `php-zip` を apt でインストール、Composerを公式インストーラでシステムに導入
   - 実際のLaravelアプリ本体はこのdevcontainerには無く、Windows側に別途構築済み。このdevcontainerでは、`laravel/`フォルダ配下のLaravel統合コード（コントローラ・Bladeビュー等）の構文チェックや、`illuminate/view`等を使った単体での動作検証に利用する
+- PostgreSQL 16系（`post_create.sh`で公式PGDGリポジトリから導入、`postStartCommand`でコンテナ起動のたびに自動起動）
+  - Windows側の本番相当DBがversion 16系（16.3）のため合わせている
+  - **個人情報を含む実データは投入しない**。テストには、Windows側に既にあるLaravelのFactory経由（合成データ）のSeederを使う想定
 
 ## 技術仕様
 1. html + javascript
