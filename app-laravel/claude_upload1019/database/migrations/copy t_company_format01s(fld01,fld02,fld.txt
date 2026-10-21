@@ -1,0 +1,1 @@
+copy t_company_format01s(fld01,fld02,fld03,fld04,fld05,fld06,fld07,fld08,fld09,seq) from 'c:\temp\Q_Company_Format01_test' with encoding 'UTF8' DELIMITER ',' null as '';
