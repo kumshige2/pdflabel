@@ -18,3 +18,8 @@
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
+
+# 実際のDBパスワード・APIキー等が直接書かれているため、gitでは管理しない
+# （devcontainer内ではローカルファイルとして実際の値を保持し続ける）
+config/const.php
+config/const_BK20230615.php
