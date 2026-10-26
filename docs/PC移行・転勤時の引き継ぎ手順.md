@@ -23,6 +23,7 @@
    - `devcontainer.json`・`post_create.sh`により、PHP・Composer・PostgreSQL等の環境が自動で再構築される
 3. **`config/const.php`・`config/const_BK20230615.php`を手動で復元する**（下記「注意点」参照）
 4. PostgreSQLにテストデータを入れたい場合は、Windows側のLaravel Factory/Seeder（合成データ）を使って再投入する
+5. **postgres MCPサーバーを再登録する**（下記「注意点」参照。`playwright`は`.mcp.json`に含まれているため自動で再現される）
 
 ## 注意点
 
@@ -37,3 +38,12 @@
 2026-10-23、初回push時にGitHubのpush protectionが`MAILGUN_API_KEY`の漏洩を検知してブロックした。調査の結果、`const.php`・`database.php`に複数の秘密情報（DBパスワード`u01654`、`GEO_API01`等）が実際の値のままコミットされていたことが判明し、`git filter-repo`で全履歴から除去した上でpushし直した（詳細はコミット `漏洩した秘密情報の対処（APIキー・DBパスワード）` を参照）。
 
 今後、同様の事態を防ぐため、新しい設定ファイルを追加する際は秘密情報が含まれていないか確認すること。
+
+### postgres MCPサーバーの設定もgitに含まれていない
+
+2026-10-26に導入したMCPサーバーのうち、`postgres`（[crystaldba/postgres-mcp](https://github.com/crystaldba/postgres-mcp)）は接続文字列にdevcontainerローカルのDBパスワードを含むため、`-s local`スコープ（`~/.claude.json`、git管理外）で登録した。`playwright`は秘密情報を含まないため`-s project`スコープ（`.mcp.json`、git管理対象）で登録済みで、`git clone`すれば自動的に再現される。
+
+転勤時・コンテナ再構築後は、`postgres`の方だけ以下を再実行する必要がある（`post_create.sh`では接続情報を含むため自動化していない）。
+```
+claude mcp add postgres -s local -e DATABASE_URI="postgresql://postgres:<ローカルDBパスワード>@127.0.0.1:5432/snno3_test" -- /home/vscode/.local/bin/postgres-mcp --access-mode=unrestricted
+```

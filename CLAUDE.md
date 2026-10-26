@@ -19,6 +19,9 @@
 - PostgreSQL 17系（`post_create.sh`で公式PGDGリポジトリから導入、`postStartCommand`でコンテナ起動のたびに自動起動）
   - Windows側の本番相当DBを2026-10-19に16→17.5へ移行したため、それに合わせて17系（17.11）を導入
   - **個人情報を含む実データは投入しない**。テストには、Windows側に既にあるLaravelのFactory経由（合成データ）のSeederを使う想定
+- MCPサーバー（2026-10-26導入。Claude CodeからPostgreSQL操作・ブラウザ操作を直接行うため）
+  - `postgres`（[crystaldba/postgres-mcp](https://github.com/crystaldba/postgres-mcp)）… devcontainer内のローカルPostgreSQL（`snno3_test`）に接続。接続文字列（パスワード含む）を含むため`-s local`スコープで登録し、`.mcp.json`（git管理）には含めない。コンテナ再構築後は`claude mcp add postgres -s local -e DATABASE_URI="postgresql://postgres:<パスワード>@127.0.0.1:5432/snno3_test" -- /home/vscode/.local/bin/postgres-mcp --access-mode=unrestricted`を再実行する必要がある
+  - `playwright`（`@playwright/mcp`、Microsoft公式）… ブラウザ操作用。秘密情報を含まないため`-s project`スコープで`.mcp.json`に登録済み（git管理対象）
 
 ## 技術仕様
 1. html + javascript

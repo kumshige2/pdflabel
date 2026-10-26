@@ -22,3 +22,20 @@ sudo apt-get update
 sudo apt-get install -y postgresql-17
 # 個人情報を含む実データは投入しないこと。テスト用にはWindows側のLaravel Factory/Seeder（合成データ）を使う
 sudo pg_ctlcluster 17 main start
+
+# MCPサーバー（Claude CodeからPostgreSQL操作・ブラウザ操作を直接行うため。2026-10-26導入）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+
+# postgres-mcp（crystaldba/postgres-mcp）
+# PyPI公開版（0.1.0）は古いテンプレートのままで動作しないため、GitHubの最新ソースからインストールする
+# pyproject.tomlがPyPIに存在しないpglast==7.11を厳密指定しているため、利用可能な最新版に緩めてからインストールする
+git clone --depth 1 https://github.com/crystaldba/postgres-mcp /tmp/postgres-mcp-src
+sed -i 's/pglast==7.11/pglast>=7.20/' /tmp/postgres-mcp-src/pyproject.toml
+uv tool install /tmp/postgres-mcp-src --python 3.13
+rm -rf /tmp/postgres-mcp-src
+# 接続先（DATABASE_URI）・--access-modeはリポジトリにコミットしない設定で登録するため、
+# `claude mcp add postgres -s local -e DATABASE_URI=... -- postgres-mcp --access-mode=unrestricted` をコンテナ作成後に別途実行する
+
+# Playwright MCP（@playwright/mcp）用のブラウザ本体
+npx -y playwright install --with-deps chromium
