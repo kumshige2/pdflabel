@@ -18,3 +18,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{contact}/status', [AdminContactController::class, 'updateStatus'])->name('updateStatus');
     });
 });
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

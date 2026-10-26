@@ -1,2 +1,5 @@
 .venv/
 data/
+
+# Playwright MCPの一時出力（スナップショット・スクリーンショット・コンソールログ）
+.playwright-mcp/

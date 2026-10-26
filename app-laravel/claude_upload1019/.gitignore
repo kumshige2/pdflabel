@@ -23,3 +23,7 @@ Homestead.yaml
 # （devcontainer内ではローカルファイルとして実際の値を保持し続ける）
 config/const.php
 config/const_BK20230615.php
+
+# `php artisan adminlte:install`で再生成できる公開アセット・翻訳ファイルのため、gitでは管理しない
+/public/vendor
+/lang/vendor
