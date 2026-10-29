@@ -39,3 +39,13 @@ rm -rf /tmp/postgres-mcp-src
 
 # Playwright MCP（@playwright/mcp）用のブラウザ本体
 npx -y playwright install --with-deps chromium
+
+# 個人用スキル・サブエージェント（複数マシン・複数devcontainerで共通利用するため、GitHub個人リポジトリから永続化）
+# コンテナ作成直後はgh未認証のため失敗するのが通常。その場合はスキップし、
+# 'gh auth login' 後に setup_claude_personal.sh を手動で再実行する。
+if gh auth status >/dev/null 2>&1; then
+  .devcontainer/setup_claude_personal.sh
+else
+  echo "注意: GitHubに未ログインのため、個人用スキル・サブエージェントのセットアップをスキップしました。"
+  echo "'gh auth login' 実行後に '.devcontainer/setup_claude_personal.sh' を実行してください。"
+fi

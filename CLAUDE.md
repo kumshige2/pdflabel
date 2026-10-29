@@ -22,6 +22,10 @@
 - MCPサーバー（2026-10-26導入。Claude CodeからPostgreSQL操作・ブラウザ操作を直接行うため）
   - `postgres`（[crystaldba/postgres-mcp](https://github.com/crystaldba/postgres-mcp)）… devcontainer内のローカルPostgreSQL（`snno3_test`）に接続。接続文字列（パスワード含む）を含むため`-s local`スコープで登録し、`.mcp.json`（git管理）には含めない。コンテナ再構築後は`claude mcp add postgres -s local -e DATABASE_URI="postgresql://postgres:<パスワード>@127.0.0.1:5432/snno3_test" -- /home/vscode/.local/bin/postgres-mcp --access-mode=unrestricted`を再実行する必要がある
   - `playwright`（`@playwright/mcp`、Microsoft公式）… ブラウザ操作用。秘密情報を含まないため`-s project`スコープで`.mcp.json`に登録済み（git管理対象）
+- 個人用スキル・サブエージェント（2026-10-29導入。`/claude/skills`・`/claude/agents/`を複数マシン・複数devcontainerで共通利用するため）
+  - `~/.claude/skills`・`~/.claude/agents`はコンテナのホームディレクトリ内にあり、devcontainer再構築で消えるため、GitHubの個人リポジトリ（[kumshige2/claude-skills-agents](https://github.com/kumshige2/claude-skills-agents)、private）で管理し、`.devcontainer/setup_claude_personal.sh`で`~/.claude-personal`にclone/pullした上でシンボリックリンクする
+  - コンテナ作成直後は`gh`が未認証のため`post_create.sh`からの自動実行は失敗する。再構築後は`gh auth login`を実行してから`.devcontainer/setup_claude_personal.sh`を手動で再実行する必要がある
+  - コンテナ起動時（`postStartCommand`）には既にclone済みなら`git pull --ff-only`するだけなので、別マシンでpushした更新は次回コンテナ起動時に反映される
 
 ## 技術仕様
 1. html + javascript

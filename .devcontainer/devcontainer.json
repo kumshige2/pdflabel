@@ -16,5 +16,5 @@
     }
   },
   "postCreateCommand": ".devcontainer/post_create.sh && sudo chown -R vscode:vscode /home/vscode/.claude",
-  "postStartCommand": "sudo service postgresql start"
+  "postStartCommand": "sudo service postgresql start && (git -C /home/vscode/.claude-personal pull --ff-only 2>/dev/null || true)"
 }
