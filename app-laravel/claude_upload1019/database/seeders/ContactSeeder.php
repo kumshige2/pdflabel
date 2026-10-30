@@ -41,7 +41,7 @@ class ContactSeeder extends Seeder
         $statuses = ['新規', '対応中', '解決済み'];
 
         // 男女比率50%/50%になるよう、あらかじめ性別の配列を作ってシャッフルする
-        $genders = array_merge(array_fill(0, 50, 'male'), array_fill(0, 50, 'female'));
+        $genders = array_merge(array_fill(0, 25, 'male'), array_fill(0, 25, 'female'));
         shuffle($genders);
 
         foreach ($genders as $gender) {
